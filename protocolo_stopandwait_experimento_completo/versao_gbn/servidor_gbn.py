@@ -1,4 +1,3 @@
-# Servidor GBN - a ser implementado
 import socket
 
 IP = '10.0.0.2'
@@ -23,19 +22,19 @@ def main():
 
                 if seq == expected_seq:
                     file.write(payload)
-                    print(f'Recebido seq={seq}, dados gravados.')
+                    print('Recebido seq={}, dados gravados.'.format(seq))
                     expected_seq += 1
 
                 elif seq > expected_seq:
                     sliding_window[seq] = payload
-                    print(f'Pacote seq={seq} armazenado na janela.')
+                    print('Pacote seq={} armazenado na janela.'.format(seq))
 
                 ack = bytes([expected_seq - 1])
                 sock.sendto(ack, addr)
-                print(f'ACK {expected_seq - 1} enviado.')
+                print('ACK {} enviado.'.format(expected_seq - 1))
 
             except Exception as e:
-                print(f'Erro: {e}')
+                print('Erro: {}'.format(e))
                 break
 
     sock.close()

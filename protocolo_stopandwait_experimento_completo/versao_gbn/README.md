@@ -79,7 +79,7 @@ Durante cada experimento, registre:
 
 1. Inicie a topologia:
 ```bash
-sudo mn --custom topo_stopandwait.py --topo stopandwait --link tc --controller=remote
+sudo mn --custom topo_stopandwait.py --topo stopandwait --link tc --controller=none
 ```
 
 2. Em terminais separados:
