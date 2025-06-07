@@ -70,7 +70,7 @@ def main():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('w', '--window', type=int, choices=[4,8,16], help='Escolha o tamanho da janela: 4, 8, 16', default=16)
+    parser.add_argument('-w', '--window', type=int, choices=[4,8,16], help='Escolha o tamanho da janela: 4, 8, 16', default=16)
     args = parser.parse_args()
     N = args.window
     main()
