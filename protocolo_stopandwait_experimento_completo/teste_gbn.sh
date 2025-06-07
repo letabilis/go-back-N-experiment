@@ -10,16 +10,17 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Parametros
-janelas=(4, 8, 16)
+janelas=(4 8 16)
 testes=(
-    "A 1 50 0",
-    "B 1 200 0",
-    "C 1 200 5",
-    "D 10 100 0",
-    "F 100 300 0",
-    "G 100 300 5",
-    "H 100 300 10"
-  )
+  "A 1 50 0"
+  "B 1 200 0"
+  "C 1 200 5"
+  "D 10 100 0"
+  "F 100 300 0"
+  "G 100 300 5"
+  "H 100 300 10"
+)
+
 
 for janela in "${janelas[@]"; do
   for teste in "${teste[@]"; do
@@ -34,7 +35,7 @@ for janela in "${janelas[@]"; do
 
     clear
 
-    printf "Caso | Velocidade | Atraso | Perda | Janela\n$caso | $vel | $atraso | $perda\n\n"
+    printf "Caso: %s | Velocidade: %s | Atraso: %s | Perda: %s | Janela: %s\n" "$caso" "$vel" "$atraso" "$perda" "$janela"
 
     echo "[INFO] Iniciando Mininet..."
     mn --custom topo_stopandwait.py --topo stopandwait --link tc >/dev/null 2>&1 &
@@ -86,3 +87,5 @@ for janela in "${janelas[@]"; do
 
     echo "[INFO] Encerrando Mininet..."
     mn -c
+  done
+done
