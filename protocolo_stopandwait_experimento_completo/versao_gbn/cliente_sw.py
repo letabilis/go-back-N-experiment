@@ -21,14 +21,14 @@ def main():
             while not acked:
                 packet = seq.to_bytes(1, 'big') + data
                 sock.sendto(packet, (SERVER_IP, PORT))
-                print(f'Enviado quadro com seq={seq}')
+                print('Enviado quadro com seq={}'.format(seq))
                 try:
                     ack, _ = sock.recvfrom(1)
                     if int.from_bytes(ack, 'big') == seq:
                         acked = True
-                        print(f'ACK {seq} recebido')
+                        print('ACK {} recebido'.format(seq))
                 except socket.timeout:
-                    print(f'Timeout, reenviando seq={seq}')
+                    print('Timeout, reenviando seq={}'.format(seq))
             seq = 1 - seq
 
     print('Transmissão finalizada.')
@@ -38,17 +38,16 @@ def main():
     while not acked and not TO:
         packet = seq.to_bytes(1, 'big')
         sock.sendto(packet, (SERVER_IP, PORT))
-        print(f'Enviado quadro com seq={seq}')
+        print('Enviado quadro com seq={}'.format(seq))
         try:
             ack, _ = sock.recvfrom(1)
             if int.from_bytes(ack, 'big') == seq:
                 acked = True
-                print(f'ACK {seq} recebido')
+                print('ACK {} recebido'.format(seq))
         except socket.timeout:
-            print(f'Timeout, encerrando')
+            print('Timeout, encerrando')
             TO = True
-    
-              
+
     sock.close()
 
 if __name__ == '__main__':

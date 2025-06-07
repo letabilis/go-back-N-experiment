@@ -13,7 +13,7 @@ echo "[INFO] Limpando Mininet..."
 mn -c
 
 echo "[INFO] Iniciando Mininet..."
-mn --custom topo_stopandwait.py --topo stopandwait --link tc --controller=remote > /dev/null 2>&1 &
+mn --custom topo_stopandwait.py --topo stopandwait --link tc >/dev/null 2>&1 &
 sleep 3
 
 echo "[INFO] Executando servidor em h2..."
@@ -30,11 +30,11 @@ sleep 15
 END=$(date +%s.%N)
 RUNTIME=$(echo "$END - $START" | bc)
 echo "[INFO] Tempo de transmissão: $RUNTIME segundos"
-echo "$RUNTIME" > tempo_execucao.txt
+echo "$RUNTIME" >tempo_execucao.txt
 
 # Comparação dos arquivos
 echo "[INFO] Verificando integridade dos dados..."
-if diff output.txt input.txt > diff_result.txt; then
+if diff output.txt input.txt >diff_result.txt; then
   echo "[SUCCESS] Arquivos coincidem."
 else
   echo "[FAIL] Arquivos não coincidem. Veja diff_result.txt."
