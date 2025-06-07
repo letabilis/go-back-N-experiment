@@ -1,12 +1,14 @@
 import socket
+import argparse
 
-N = 4
+N = 16 
 TIMEOUT = 2
 BLOCK_SIZE = 512
 SERVER_IP = '10.0.0.2'
 PORT = 5000
 
 def main():
+    global N
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.settimeout(TIMEOUT)
 
@@ -67,4 +69,9 @@ def main():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('w', '--window', type=int, choices=[4,8,16], help='Escolha o tamanho da janela: 4, 8, 16', default=16)
+    args = parser.parse_args()
+    N = args.window
     main()
+    
