@@ -9,6 +9,10 @@ if [ "$EUID" -ne 0 ]; then
   exit
 fi
 
+# Diretorios
+mkdir -p graficos
+mkdir -p logs
+
 # Parametros
 janelas=(4 8 16)
 testes=(
@@ -39,7 +43,7 @@ for janela in "${janelas[@]"; do
 
     echo "[INFO] Iniciando Mininet..."
 
-    cat > versao_gbn/topo_stopandwait.py <<EOF
+    cat > topo_stopandwait.py <<EOF
 from mininet.topo import Topo
 class StopAndWaitTopo(Topo):
     def build(self):
@@ -55,7 +59,7 @@ EOF
     sleep 3
 
     echo "[INFO] Executando servidor em h2..."
-    xterm -e "mnexec -a $(pgrep -f 'bash.*h2') python3 servidor_gbn.py > servidor_log.txt" &
+    xterm -e "mnexec -a $(pgrep -f 'bash.*h2') python3 servidor_gbn.py > logs/servidor_log.txt" &
     sleep 2
 
     echo "[INFO] Iniciando medição de tempo e cliente em h1..."
@@ -81,7 +85,7 @@ EOF
 
     # Geração de gráfico com matplotlib
     echo "[INFO] Gerando gráfico de tempo..."
-
+    mkdir -p results
     python3 <<EOF
     import matplotlib.pyplot as plt
 
@@ -94,7 +98,7 @@ EOF
     plt.title("Tempo de Transmissão - gbn")
     plt.ylabel("Tempo (s)")
     plt.tight_layout()
-    plt.savefig("grafico_tempo_gbn.png")
+    plt.savefig("graficos/caso_${caso}_janela_${janela}.png")
     print("[INFO] Gráfico salvo como grafico_tempo_gbn.png")
     EOF
 
