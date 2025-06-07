@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Teste automatizado do protocolo gbn com Mininet
-# Requer: Mininet, xterm, Python3, matplotlib
+# Requer: Mininet, xterm, Python3, matplotlib, bc
 
 # Verifica se está rodando como root
 if [ "$EUID" -ne 0 ]; then
@@ -47,10 +47,11 @@ python3 <<EOF
 import matplotlib.pyplot as plt
 
 with open("tempo_execucao.txt") as f:
-    tempo = float(f.read().strip())
+      tempo = float(f.read().strip())
 
 plt.figure(figsize=(6,4))
-plt.bar(["gbn"], [tempo], color="steelblue")
+plt.bar([0], [tempo], color="steelblue")
+plt.xticks([0], ["gbn"])
 plt.title("Tempo de Transmissão - gbn")
 plt.ylabel("Tempo (s)")
 plt.tight_layout()
