@@ -9,6 +9,8 @@ if [ "$EUID" -ne 0 ]; then
   exit
 fi
 
+janela=$1
+
 echo "[INFO] Limpando Mininet..."
 mn -c
 
@@ -23,7 +25,9 @@ sleep 2
 echo "[INFO] Iniciando medição de tempo e cliente em h1..."
 START=$(date +%s.%N)
 
-xterm -e "mnexec -a $(pgrep -f 'bash.*h1') python3 cliente_gbn.py > cliente_log.txt" &
+printf "Parametros: \nJanela: $janela"
+
+xterm -e "mnexec -a $(pgrep -f 'bash.*h1') python3 cliente_gbn.py --window $janela > cliente_log.txt" &
 
 sleep 15
 
