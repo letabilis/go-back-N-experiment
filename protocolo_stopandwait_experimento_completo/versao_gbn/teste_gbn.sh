@@ -85,7 +85,6 @@ EOF
 
     # Geração de gráfico com matplotlib
     echo "[INFO] Gerando gráfico de tempo..."
-    mkdir -p results
     python3 <<EOF
     import matplotlib.pyplot as plt
 
