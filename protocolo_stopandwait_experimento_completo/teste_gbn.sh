@@ -9,59 +9,80 @@ if [ "$EUID" -ne 0 ]; then
   exit
 fi
 
-janela=$1
+# Parametros
+janelas=(4, 8, 16)
+testes=(
+    "A 1 50 0",
+    "B 1 200 0",
+    "C 1 200 5",
+    "D 10 100 0",
+    "F 100 300 0",
+    "G 100 300 5",
+    "H 100 300 10"
+  )
 
-echo "[INFO] Limpando Mininet..."
-mn -c
+for janela in "${janelas[@]"; do
+  for teste in "${teste[@]"; do
+    parametros=($teste)
+    caso=${parametros[0]}
+    vel=${parametros[1]}
+    atraso=${parametros[2]}
+    perda=${parametros[3]}
+    
+    echo "[INFO] Limpando Mininet..."
+    mn -c
 
-echo "[INFO] Iniciando Mininet..."
-mn --custom topo_stopandwait.py --topo stopandwait --link tc >/dev/null 2>&1 &
-sleep 3
+    clear
 
-echo "[INFO] Executando servidor em h2..."
-xterm -e "mnexec -a $(pgrep -f 'bash.*h2') python3 servidor_gbn.py > servidor_log.txt" &
-sleep 2
+    printf "Caso | Velocidade | Atraso | Perda | Janela\n$caso | $vel | $atraso | $perda\n\n"
 
-echo "[INFO] Iniciando medição de tempo e cliente em h1..."
-START=$(date +%s.%N)
+    echo "[INFO] Iniciando Mininet..."
+    mn --custom topo_stopandwait.py --topo stopandwait --link tc >/dev/null 2>&1 &
+    sleep 3
 
-printf "Parametros: \nJanela: $janela"
+    echo "[INFO] Executando servidor em h2..."
+    xterm -e "mnexec -a $(pgrep -f 'bash.*h2') python3 servidor_gbn.py > servidor_log.txt" &
+    sleep 2
 
-xterm -e "mnexec -a $(pgrep -f 'bash.*h1') python3 cliente_gbn.py --window $janela > cliente_log.txt" &
+    echo "[INFO] Iniciando medição de tempo e cliente em h1..."
+    START=$(date +%s.%N)
 
-sleep 15
 
-END=$(date +%s.%N)
-RUNTIME=$(echo "$END - $START" | bc)
-echo "[INFO] Tempo de transmissão: $RUNTIME segundos"
-echo "$RUNTIME" >tempo_execucao.txt
+    xterm -e "mnexec -a $(pgrep -f 'bash.*h1') python3 cliente_gbn.py --window $janela > cliente_log.txt" &
 
-# Comparação dos arquivos
-echo "[INFO] Verificando integridade dos dados..."
-if diff output.txt input.txt >diff_result.txt; then
-  echo "[SUCCESS] Arquivos coincidem."
-else
-  echo "[FAIL] Arquivos não coincidem. Veja diff_result.txt."
-fi
+    sleep 15
 
-# Geração de gráfico com matplotlib
-echo "[INFO] Gerando gráfico de tempo..."
+    END=$(date +%s.%N)
+    RUNTIME=$(echo "$END - $START" | bc)
+    echo "[INFO] Tempo de transmissão: $RUNTIME segundos"
+    echo "$RUNTIME" >tempo_execucao.txt
 
-python3 <<EOF
-import matplotlib.pyplot as plt
+    # Comparação dos arquivos
+    echo "[INFO] Verificando integridade dos dados..."
+    if diff output.txt input.txt >diff_result.txt; then
+      echo "[SUCCESS] Arquivos coincidem."
+    else
+      echo "[FAIL] Arquivos não coincidem. Veja diff_result.txt."
+    fi
 
-with open("tempo_execucao.txt") as f:
-      tempo = float(f.read().strip())
+    # Geração de gráfico com matplotlib
+    echo "[INFO] Gerando gráfico de tempo..."
 
-plt.figure(figsize=(6,4))
-plt.bar([0], [tempo], color="steelblue")
-plt.xticks([0], ["gbn"])
-plt.title("Tempo de Transmissão - gbn")
-plt.ylabel("Tempo (s)")
-plt.tight_layout()
-plt.savefig("grafico_tempo_gbn.png")
-print("[INFO] Gráfico salvo como grafico_tempo_gbn.png")
-EOF
+    python3 <<EOF
+    import matplotlib.pyplot as plt
 
-echo "[INFO] Encerrando Mininet..."
-mn -c
+    with open("tempo_execucao.txt") as f:
+          tempo = float(f.read().strip())
+
+    plt.figure(figsize=(6,4))
+    plt.bar([0], [tempo], color="steelblue")
+    plt.xticks([0], ["gbn"])
+    plt.title("Tempo de Transmissão - gbn")
+    plt.ylabel("Tempo (s)")
+    plt.tight_layout()
+    plt.savefig("grafico_tempo_gbn.png")
+    print("[INFO] Gráfico salvo como grafico_tempo_gbn.png")
+    EOF
+
+    echo "[INFO] Encerrando Mininet..."
+    mn -c
