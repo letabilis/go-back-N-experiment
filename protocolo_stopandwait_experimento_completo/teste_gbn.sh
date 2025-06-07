@@ -39,20 +39,18 @@ for janela in "${janelas[@]"; do
 
     echo "[INFO] Iniciando Mininet..."
 
-    python3 << EOF
+    cat > versao_gbn/topo_stopandwait.py <<EOF
+from mininet.topo import Topo
+class StopAndWaitTopo(Topo):
+    def build(self):
+        client = self.addHost('h1')
+        server = self.addHost('h2')
+        switch = self.addSwitch('s1')
+        self.addLink(client, switch, bw=$vel, delay='${atraso}ms', loss=$perda)
+        self.addLink(server, switch, bw=$vel, delay='${atraso}ms', loss=$perda)
+topos = {'stopandwait': (lambda: StopAndWaitTopo())}
+EOF
 
-
-
-
-
-
-
-
-
-
-
-
-    EOF
     mn --custom topo_stopandwait.py --topo stopandwait --link tc >/dev/null 2>&1 &
     sleep 3
 
