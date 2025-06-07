@@ -38,6 +38,21 @@ for janela in "${janelas[@]"; do
     printf "Caso: %s | Velocidade: %s | Atraso: %s | Perda: %s | Janela: %s\n" "$caso" "$vel" "$atraso" "$perda" "$janela"
 
     echo "[INFO] Iniciando Mininet..."
+
+    python3 << EOF
+
+
+
+
+
+
+
+
+
+
+
+
+    EOF
     mn --custom topo_stopandwait.py --topo stopandwait --link tc >/dev/null 2>&1 &
     sleep 3
 
