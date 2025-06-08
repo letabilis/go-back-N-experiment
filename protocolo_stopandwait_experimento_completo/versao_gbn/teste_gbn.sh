@@ -24,16 +24,19 @@ testes=(
   "G 100 300 5"
   "H 100 300 10"
 )
+metricas=(
+  "Tempo total de transmissão"
+  "Robustez a perdas"
+  "Número de retransmissões"
+  "Eficiência"
+)
 
-for teste in "${testes[@]}"; do
-  parametros=($teste)
-  caso=${parametros[0]}
-  vel=${parametros[1]}
-  atraso=${parametros[2]}
-  perda=${parametros[3]}
-  printf "Caso: %s | Velocidade: %s | Atraso: %s | Perda: %s\n\n" "$caso" "$vel" "$atraso" "$perda"
+# Funções auxiliares
+function init_topology {
 
-  >"logs/tempos_caso_${caso}.txt"
+  local vel=$1
+  local atraso=$2
+  local perda=$3
 
   cat >topo_stopandwait.py <<EOF
 from mininet.topo import Topo
@@ -46,29 +49,96 @@ class StopAndWaitTopo(Topo):
         self.addLink(server, switch, bw=$vel, delay='${atraso}ms', loss=$perda)
 topos = {'stopandwait': (lambda: StopAndWaitTopo())}
 EOF
+}
+
+function plot {
+  local caso=$1
+  local metrica=$2
+  python3 <<EOF
+import matplotlib.pyplot as plt
+
+resultados = {}
+with open("logs/${caso}/${metrica}.txt") as f:
+    for line in f:
+        janela, valor = line.strip().split()
+        resultados[int(janela)] = float(valor)
+
+plt.figure(figsize=(6, 4))
+plt.plot([4, 8, 16], [resultados[k] for k in [4, 8, 16]], marker='o', color="steelblue")
+plt.title("${caso} - ${metrica}")
+plt.xlabel("Janela")
+plt.ylabel("${metrica}")
+plt.tight_layout()
+plt.savefig("graficos/${caso}/${metrica}.png")
+print("[INFO] Gráfico salvo como 'graficos/${caso}/${metrica}.png'")
+EOF
+}
+
+for teste in "${testes[@]}"; do
+  parametros=($teste)
+  caso=${parametros[0]}
+  vel=${parametros[1]}
+  atraso=${parametros[2]}
+  perda=${parametros[3]}
+
+  printf "[TESTE] Caso: %s | Velocidade: %s | Atraso: %s | Perda: %s\n\n" "$caso" "$vel" "$atraso" "$perda"
+
+  # Separado arquivo de graficos, log para cada caso de teste.
+  mkdir -p graficos/${caso}
+  mkdir -p logs/${caso}
+
+  >"logs/${caso}/${metricas[0]}.txt"
+  >"logs/${caso}/${metricas[1]}.txt"
+  >"logs/${caso}/${metricas[2]}.txt"
+  >"logs/${caso}/${metricas[3]}.txt"
+
+  # Iniciando topologia com os parametros para o teste
+  init_topology $vel $atraso $perda
+
   echo "[INFO] Iniciando Mininet..."
   mn --custom topo_stopandwait.py --topo stopandwait --link tc >/dev/null 2>&1 &
   sleep 3
 
   for janela in "${janelas[@]}"; do
-    printf "	Janela: %s\n\n" "$janela"
+    printf "[JANELA]: %s\n" "$janela"
 
-    echo "[INFO] Executando servidor em h2..."
-    xterm -e "mnexec -a $(pgrep -f 'bash.*h2') python3 servidor_gbn.py > logs/servidor_log.txt" &
-    sleep 2
+    for metrica in "${metricas[@]}"; do
+      echo "[MÉTRICA] $metrica"
+      case ${metrica} in
+      "Tempo total de transmissão")
+        echo "[INFO] Executando servidor em h2..."
+        xterm -e "mnexec -a $(pgrep -f 'bash.*h2') python3 servidor_gbn.py > logs/servidor_log.txt" &
+        sleep 2
 
-    echo "[INFO] Iniciando medição de tempo e cliente em h1..."
-    START=$(date +%s.%N)
+        echo "[INFO] Iniciando medição de tempo e cliente em h1..."
+        START=$(date +%s.%N)
 
-    xterm -e "mnexec -a $(pgrep -f 'bash.*h1') python3 cliente_gbn.py --window $janela > cliente_log.txt" &
-    sleep 15
+        xterm -e "mnexec -a $(pgrep -f 'bash.*h1') python3 cliente_gbn.py --window $janela > logs/cliente_log.txt" &
+        sleep 15
 
-    END=$(date +%s.%N)
-    RUNTIME=$(echo "$END - $START" | bc)
-    echo "[INFO] Tempo de transmissão: $RUNTIME segundos"
+        END=$(date +%s.%N)
+        RUNTIME=$(echo "$END - $START" | bc)
+        echo "[INFO] Tempo de transmissão: $RUNTIME segundos"
 
-    echo "$janela $RUNTIME" >>"logs/tempos_caso_${caso}.txt"
+        echo "$janela $RUNTIME" >>"logs/${caso}/${metrica}.txt"
+        ;;
 
+      "Robustez a perdas")
+        echo "todo"
+        ;;
+
+      "Número de retransmissões")
+        echo "Mundo Ola"
+        ;;
+
+      "Eficiência")
+        echo "Oi Mundo"
+        ;;
+      esac
+
+      echo "[INFO] Gerando gráfico comparativo para o cenário [$caso/$metrica]..."
+      plot ${caso} ${metrica}
+    done
     echo "[INFO] Verificando integridade dos dados..."
     if diff output.txt input.txt >diff_result.txt; then
       echo "[SUCCESS] Arquivos coincidem."
@@ -76,28 +146,6 @@ EOF
       echo "[FAIL] Arquivos não coincidem. Veja diff_result.txt."
     fi
   done
-
-  echo "[INFO] Gerando gráfico comparativo para o caso $caso..."
-  python3 <<EOF
-import matplotlib.pyplot as plt
-
-resultados = {}
-with open("logs/tempos_caso_{}.txt".format("${caso}")) as f:
-    for line in f:
-        janela, tempo = line.strip().split()
-        resultados[int(janela)] = float(tempo)
-
-plt.figure(figsize=(6,4))
-plt.plot([4, 8, 16], [resultados[k] for k in [4, 8, 16]], marker='o', color="steelblue")
-plt.title("VELOCIDADE: ${vel} | ATRASO: ${atraso} | PERDA: ${perda}")
-plt.xlabel("Janela (N)")
-plt.ylabel("Tempo (s)")
-plt.tight_layout()
-plt.savefig("graficos/caso_{}.png".format("${caso}"))
-print("[INFO] Gráfico salvo como graficos/caso_{}.png".format("${caso}"))
-EOF
-
 done
-
 echo "[INFO] Encerrando Mininet..."
 mn -c
