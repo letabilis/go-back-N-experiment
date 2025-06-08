@@ -32,7 +32,7 @@ for teste in "${testes[@]}"; do
   atraso=${parametros[2]}
   perda=${parametros[3]}
 
-  echo "" >"logs/tempos_caso_${caso}.txt"
+  >"logs/tempos_caso_${caso}.txt"
 
   cat >topo_stopandwait.py <<EOF
 from mininet.topo import Topo
