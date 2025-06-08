@@ -89,7 +89,7 @@ with open("logs/tempos_caso_{}.txt".format("${caso}")) as f:
 
 plt.figure(figsize=(6,4))
 plt.plot([4, 8, 16], [resultados[k] for k in [4, 8, 16]], marker='o', color="steelblue")
-plt.title("CASE: ${caso} | BANDWIDTH: ${vel} | DELAY: ${atraso} | LOSS: ${perda}")
+plt.title("VELOCIDADE: ${vel} | ATRASO: ${atraso} | PERDA: ${perda}")
 plt.xlabel("Janela (N)")
 plt.ylabel("Tempo (s)")
 plt.tight_layout()
