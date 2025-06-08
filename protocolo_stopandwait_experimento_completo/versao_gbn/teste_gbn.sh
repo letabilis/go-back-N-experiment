@@ -32,7 +32,7 @@ for teste in "${testes[@]}"; do
   atraso=${parametros[2]}
   perda=${parametros[3]}
 
-  echo "" > "logs/tempos_caso_${caso}.txt"
+  echo "" >"logs/tempos_caso_${caso}.txt"
 
   cat >topo_stopandwait.py <<EOF
 from mininet.topo import Topo
@@ -54,20 +54,20 @@ EOF
     sleep 3
 
     echo "[INFO] Executando servidor em h2..."
-    xterm -e "mnexec -a \$(pgrep -f 'bash.*h2') python3 servidor_gbn.py > logs/servidor_log.txt" &
+    xterm -e "mnexec -a $(pgrep -f 'bash.*h2') python3 servidor_gbn.py > logs/servidor_log.txt" &
     sleep 2
 
     echo "[INFO] Iniciando medição de tempo e cliente em h1..."
-    START=\$(date +%s.%N)
+    START=$(date +%s.%N)
 
-    xterm -e "mnexec -a \$(pgrep -f 'bash.*h1') python3 cliente_gbn.py --window $janela > cliente_log.txt" &
+    xterm -e "mnexec -a $(pgrep -f 'bash.*h1') python3 cliente_gbn.py --window $janela > cliente_log.txt" &
     sleep 15
 
-    END=\$(date +%s.%N)
-    RUNTIME=\$(echo "\$END - \$START" | bc)
-    echo "[INFO] Tempo de transmissão: \$RUNTIME segundos"
+    END=$(date +%s.%N)
+    RUNTIME=$(echo "$END - $START" | bc)
+    echo "[INFO] Tempo de transmissão: $RUNTIME segundos"
 
-    echo "$janela $RUNTIME" >> "logs/tempos_caso_${caso}.txt"
+    echo "$janela $RUNTIME" >>"logs/tempos_caso_${caso}.txt"
 
     echo "[INFO] Verificando integridade dos dados..."
     if diff output.txt input.txt >diff_result.txt; then
@@ -103,4 +103,3 @@ print(f"[INFO] Gráfico salvo como graficos/caso_${caso}.png")
 EOF
 
 done
-
