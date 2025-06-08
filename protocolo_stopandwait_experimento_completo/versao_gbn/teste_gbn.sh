@@ -74,9 +74,6 @@ EOF
     else
       echo "[FAIL] Arquivos não coincidem. Veja diff_result.txt."
     fi
-
-    echo "[INFO] Encerrando Mininet..."
-    mn -c
   done
 
   echo "[INFO] Gerando gráfico comparativo para o caso $caso..."
@@ -100,3 +97,6 @@ print("[INFO] Gráfico salvo como graficos/caso_{}.png".format("${caso}"))
 EOF
 
 done
+
+echo "[INFO] Encerrando Mininet..."
+mn -c
