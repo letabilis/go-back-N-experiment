@@ -45,13 +45,12 @@ class StopAndWaitTopo(Topo):
         self.addLink(server, switch, bw=$vel, delay='${atraso}ms', loss=$perda)
 topos = {'stopandwait': (lambda: StopAndWaitTopo())}
 EOF
+  echo "[INFO] Iniciando Mininet..."
+  mn --custom topo_stopandwait.py --topo stopandwait --link tc >/dev/null 2>&1 &
+  sleep 3
 
   for janela in "${janelas[@]}"; do
     printf "Caso: %s | Velocidade: %s | Atraso: %s | Perda: %s | Janela: %s\n" "$caso" "$vel" "$atraso" "$perda" "$janela"
-
-    echo "[INFO] Iniciando Mininet..."
-    mn --custom topo_stopandwait.py --topo stopandwait --link tc >/dev/null 2>&1 &
-    sleep 3
 
     echo "[INFO] Executando servidor em h2..."
     xterm -e "mnexec -a $(pgrep -f 'bash.*h2') python3 servidor_gbn.py > logs/servidor_log.txt" &
@@ -91,12 +90,10 @@ with open("logs/tempos_caso_{}.txt".format("${caso}")) as f:
         resultados[int(janela)] = float(tempo)
 
 plt.figure(figsize=(6,4))
-plt.xticks([0,1,2], [4, 8, 16])
-plt.bar([0,1,2], [resultados[k] for k in [4, 8, 16]], color="steelblue")
-plt.title("Tempo de Transmissão - Caso {}".format("${caso}"))
+plt.plot([4, 8, 16], [resultados[k] for k in [4, 8, 16]], marker='o', color="steelblue")
+plt.title("${teste}")
 plt.xlabel("Tamanho da Janela")
 plt.ylabel("Tempo (s)")
-plt.tight_layout()
 plt.savefig("graficos/caso_{}.png".format("${caso}"))
 print("[INFO] Gráfico salvo como graficos/caso_{}.png".format("${caso}"))
 EOF
