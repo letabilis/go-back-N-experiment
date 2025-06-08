@@ -9,11 +9,11 @@ if [ "$EUID" -ne 0 ]; then
   exit
 fi
 
-# Diretorios
+# Diretórios
 mkdir -p graficos
 mkdir -p logs
 
-# Parametros
+# Parâmetros
 janelas=(4 8 16)
 testes=(
   "A 1 50 0"
@@ -25,25 +25,23 @@ testes=(
   "H 100 300 10"
 )
 
-
-for janela in "${janelas[@]"; do
-  for teste in "${teste[@]"; do
+for janela in "${janelas[@]}"; do
+  for teste in "${testes[@]}"; do
     parametros=($teste)
     caso=${parametros[0]}
     vel=${parametros[1]}
     atraso=${parametros[2]}
     perda=${parametros[3]}
-    
+
     echo "[INFO] Limpando Mininet..."
     mn -c
-
     clear
 
     printf "Caso: %s | Velocidade: %s | Atraso: %s | Perda: %s | Janela: %s\n" "$caso" "$vel" "$atraso" "$perda" "$janela"
 
     echo "[INFO] Iniciando Mininet..."
 
-    cat > topo_stopandwait.py <<EOF
+    cat >topo_stopandwait.py <<EOF
 from mininet.topo import Topo
 class StopAndWaitTopo(Topo):
     def build(self):
@@ -65,7 +63,6 @@ EOF
     echo "[INFO] Iniciando medição de tempo e cliente em h1..."
     START=$(date +%s.%N)
 
-
     xterm -e "mnexec -a $(pgrep -f 'bash.*h1') python3 cliente_gbn.py --window $janela > cliente_log.txt" &
 
     sleep 15
@@ -75,7 +72,6 @@ EOF
     echo "[INFO] Tempo de transmissão: $RUNTIME segundos"
     echo "$RUNTIME" >tempo_execucao.txt
 
-    # Comparação dos arquivos
     echo "[INFO] Verificando integridade dos dados..."
     if diff output.txt input.txt >diff_result.txt; then
       echo "[SUCCESS] Arquivos coincidem."
@@ -83,23 +79,22 @@ EOF
       echo "[FAIL] Arquivos não coincidem. Veja diff_result.txt."
     fi
 
-    # Geração de gráfico com matplotlib
     echo "[INFO] Gerando gráfico de tempo..."
     python3 <<EOF
-    import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
-    with open("tempo_execucao.txt") as f:
-          tempo = float(f.read().strip())
+with open("tempo_execucao.txt") as f:
+    tempo = float(f.read().strip())
 
-    plt.figure(figsize=(6,4))
-    plt.bar([0], [tempo], color="steelblue")
-    plt.xticks([0], ["gbn"])
-    plt.title("Tempo de Transmissão - gbn")
-    plt.ylabel("Tempo (s)")
-    plt.tight_layout()
-    plt.savefig("graficos/caso_${caso}_janela_${janela}.png")
-    print("[INFO] Gráfico salvo como grafico_tempo_gbn.png")
-    EOF
+plt.figure(figsize=(6,4))
+plt.bar([0], [tempo], color="steelblue")
+plt.xticks([0], ["gbn"])
+plt.title("Tempo de Transmissão - gbn")
+plt.ylabel("Tempo (s)")
+plt.tight_layout()
+plt.savefig("graficos/caso_${caso}_janela_${janela}.png")
+print("[INFO] Gráfico salvo como graficos/caso_${caso}_janela_${janela}.png")
+EOF
 
     echo "[INFO] Encerrando Mininet..."
     mn -c
