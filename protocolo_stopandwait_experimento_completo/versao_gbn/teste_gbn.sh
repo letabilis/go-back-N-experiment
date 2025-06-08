@@ -31,6 +31,7 @@ for teste in "${testes[@]}"; do
   vel=${parametros[1]}
   atraso=${parametros[2]}
   perda=${parametros[3]}
+  printf "Caso: %s | Velocidade: %s | Atraso: %s | Perda: %s\n\n" "$caso" "$vel" "$atraso" "$perda"
 
   >"logs/tempos_caso_${caso}.txt"
 
@@ -50,7 +51,7 @@ EOF
   sleep 3
 
   for janela in "${janelas[@]}"; do
-    printf "Caso: %s | Velocidade: %s | Atraso: %s | Perda: %s | Janela: %s\n" "$caso" "$vel" "$atraso" "$perda" "$janela"
+    printf "	Janela: %s\n\n" "$janela"
 
     echo "[INFO] Executando servidor em h2..."
     xterm -e "mnexec -a $(pgrep -f 'bash.*h2') python3 servidor_gbn.py > logs/servidor_log.txt" &
