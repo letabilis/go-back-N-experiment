@@ -2,7 +2,7 @@ import socket
 
 IP = '10.0.0.2'
 PORT = 5000
-BUFFER_SIZE = 512 + 1 
+BUFFER_SIZE = 513
 
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -19,23 +19,33 @@ def main():
                 seq = data[0]
                 payload = data[1:]
 
-                if seq == expected_seq:
-                    file.write(payload)
-                    print('Recebido seq={}, dados gravados.'.format(seq))
-                    expected_seq += 1
+                if payload:
+                    if seq == expected_seq:
+                        file.write(payload)
+                        print('Recebido seq={}, dados gravados.'.format(seq))
+                        expected_seq += 1
 
-                elif seq > expected_seq:
-                    print('Descartado seq={}, espera-se seq={}.'.format(seq, expected_seq))
+                    else:
+                        print('Descartado seq={}, espera-se seq={}.'.format(seq, expected_seq))
 
-                ack = bytes([expected_seq - 1])
+                    ack = bytes([expected_seq - 1])
+                    print('ACK {} enviado.'.format(expected_seq - 1))
+                    
+                else:
+                    print('Recebido sinal de encerramento, payload é nulo')
+                    ack = bytes([seq])
+                    print('ACK {} enviado.'.format(seq))
+                    encerramento = True
+                    
                 sock.sendto(ack, addr)
-                print('ACK {} enviado.'.format(expected_seq - 1))
 
-            except IndexError as e:
-                print('Recebido sinal de encerramento, payload é nulo')
-                encerramento = True
+            except Exception as e:
+                print('Erro: {}'.format(e))
+                break
+
 
     sock.close()
 
 if __name__ == '__main__':
     main()
+
