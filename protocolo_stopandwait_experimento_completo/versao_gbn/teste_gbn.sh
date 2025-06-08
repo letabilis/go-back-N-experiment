@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Teste automatizado do protocolo gbn com Mininet
-# Requer: Mininet, xterm, Python3, matplotlib, bc
+# Requer: Mininet, xterm, Python3, matplotlib, bc, awk
 
 # Verifica se está rodando como root
 if [ "$EUID" -ne 0 ]; then
@@ -13,7 +13,7 @@ fi
 mkdir -p graficos
 mkdir -p logs
 
-# Parâmetros
+# Configurações
 janelas=(4 8 16)
 testes=(
   "A 1 50 0"
@@ -25,9 +25,9 @@ testes=(
   "H 100 300 10"
 )
 metricas=(
-  "Tempo total de transmissão"
-  "Robustez a perdas"
-  "Número de retransmissões"
+  "Tempo total de transmissão (s)"
+  "Tamanho do arquivo transmitido (bits)"
+  "Taxa de pacotes perdidos (%)"
   "Eficiência"
 )
 
@@ -102,38 +102,47 @@ for teste in "${testes[@]}"; do
   for janela in "${janelas[@]}"; do
     printf "[JANELA]: %s\n" "$janela"
 
+    # Rodar algoritmo GBN, medindo o tempo de execução.
+    echo "[INFO] Executando servidor em h2..."
+    xterm -e "mnexec -a $(pgrep -f 'bash.*h2') python3 servidor_gbn.py > logs/servidor_log.txt" &
+    sleep 2
+
+    echo "[INFO] Iniciando medição de tempo e cliente em h1..."
+    START=$(date +%s.%N)
+
+    xterm -e "mnexec -a $(pgrep -f 'bash.*h1') python3 cliente_gbn.py --window $janela --file input_02.txt > logs/cliente_log.txt" &
+    sleep 15
+
+    END=$(date +%s.%N)
+    RUNTIME=$(echo "$END - $START" | bc)
+
+    # Registrar resultados nos logs
     for metrica in "${metricas[@]}"; do
-      echo "[MÉTRICA] $metrica"
+      printf "[INFO] %s: " "$metrica"
       case ${metrica} in
-      "Tempo total de transmissão")
-        echo "[INFO] Executando servidor em h2..."
-        xterm -e "mnexec -a $(pgrep -f 'bash.*h2') python3 servidor_gbn.py > logs/servidor_log.txt" &
-        sleep 2
-
-        echo "[INFO] Iniciando medição de tempo e cliente em h1..."
-        START=$(date +%s.%N)
-
-        xterm -e "mnexec -a $(pgrep -f 'bash.*h1') python3 cliente_gbn.py --window $janela > logs/cliente_log.txt" &
-        sleep 15
-
-        END=$(date +%s.%N)
-        RUNTIME=$(echo "$END - $START" | bc)
-        echo "[INFO] Tempo de transmissão: $RUNTIME segundos"
-
+      "Tempo total de transmissão (s)")
         echo "$janela $RUNTIME" >>"logs/${caso}/${metrica}.txt"
+        printf "%s\n" "$RUNTIME segundos"
         ;;
 
-      "Robustez a perdas")
-        echo "todo"
+      "Tamanho do arquivo transmitido (bits)")
+        tam=$(grep "FILE_SIZE_BITS" "logs/cliente_log.txt" | awk '{print $2}')
+        echo "$janela $tam" >>"logs/${caso}/${metrica}.txt"
+        printf "%s\n" "$tam bits"
         ;;
 
-      "Número de retransmissões")
-        echo "Mundo Ola"
+      "Taxa de pacotes perdidos (%)")
+        taxa_pacotes_perdidos=$(grep "PERCENTAGE_LOST_PACKETS" "logs/cliente_log.txt" | awk '{print $2}')
+        echo "$janela $taxa_pacotes_perdidos" >>"logs/${caso}/${metrica}.txt"
+        printf "%s\n" "$taxa_pacotes_perdidos"
         ;;
 
       "Eficiência")
-        echo "Oi Mundo"
+        eficiencia=$(echo "${tam} / (${RUNTIME} * (${vel} * 1000000))" | bc)
+        echo "$janela $eficiencia" >>"logs/${caso}/${metrica}.txt"
+        printf "%s\n" "$eficiencia"
         ;;
+
       esac
 
       echo "[INFO] Gerando gráfico comparativo para o cenário [$caso/$metrica]..."
