@@ -18,8 +18,8 @@ def main():
 
     sliding_window = []
     next_seq = current_seq = 0
-
-    count_expected_packets = ceil(os.path.getsize(INPUT_FILE_PATH) / BLOCK_SIZE)
+    file_size = os.path.getsize(INPUT_FILE_PATH)
+    count_expected_packets = ceil(file_size / BLOCK_SIZE)
     count_sent_packets = 0
     with open(INPUT_FILE_PATH, 'rb') as file:
         next_data = file.read(BLOCK_SIZE)
@@ -71,6 +71,7 @@ def main():
             if int.from_bytes(ack, 'big') == next_seq:
                 acked = True
                 print('ACK {} recebido para encerramento'.format(next_seq))
+                print('FILE_SIZE_BITS {}'.format(file_size * 8))
                 print('EXPECTED_PACKETS {}'.format(count_expected_packets))
                 print('SENT_PACKETS {}'.format(count_sent_packets))
                 print('LOST_PACKETS {}'.format(count_sent_packets - count_expected_packets))
@@ -78,7 +79,6 @@ def main():
             print('Timeout, reenviando encerramento')
 
     sock.close()
-
 
 
 if __name__ == '__main__':
@@ -89,4 +89,4 @@ if __name__ == '__main__':
     N = args.window
     INPUT_FILE_PATH = args.file
     main()
-    
+
