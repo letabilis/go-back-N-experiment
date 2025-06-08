@@ -85,21 +85,20 @@ EOF
 import matplotlib.pyplot as plt
 
 resultados = {}
-with open(f"logs/tempos_caso_${caso}.txt") as f:
+with open("logs/tempos_caso_{}.txt".format("${caso}")) as f:
     for line in f:
         janela, tempo = line.strip().split()
         resultados[int(janela)] = float(tempo)
 
-
 plt.figure(figsize=(6,4))
 plt.xticks([0,1,2], [4, 8, 16])
 plt.bar([0,1,2], [resultados[k] for k in [4, 8, 16]], color="steelblue")
-plt.title(f"Tempo de Transmissão - Caso ${caso}")
+plt.title("Tempo de Transmissão - Caso {}".format("${caso}"))
 plt.xlabel("Tamanho da Janela")
 plt.ylabel("Tempo (s)")
 plt.tight_layout()
-plt.savefig(f"graficos/caso_${caso}.png")
-print(f"[INFO] Gráfico salvo como graficos/caso_${caso}.png")
+plt.savefig("graficos/caso_{}.png".format("${caso}"))
+print("[INFO] Gráfico salvo como graficos/caso_{}.png".format("${caso}"))
 EOF
 
 done
