@@ -75,10 +75,9 @@ def main():
                                 acked = True
         except socket.timeout:
             print('ACK {} recebido para encerramento'.format(next_seq))
-            print('FILE_SIZE_BITS {}'.format(file_size * 8))
             print('EXPECTED_PACKETS {}'.format(count_expected_packets))
             print('SENT_PACKETS {}'.format(count_sent_packets))
-            print('PERCENTAGE_LOST_PACKETS {:.2f}%'.format( 
+            print('PERCENTAGE_LOST_PACKETS {:.2f}'.format( 
                 ((count_sent_packets - count_expected_packets) / count_expected_packets) * 100 
             ))
             return
