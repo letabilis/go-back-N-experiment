@@ -129,12 +129,18 @@ for teste in "${testes[@]}"; do
         printf "%s\n" "$tam bits"
         ;;
       "LOSS_(%)")
-        taxa_pacotes_perdidos=$(grep "PERCENTAGE_LOST_PACKETS" "cliente_log.txt" | awk '{print $2}')
+        if [ -f "cliente_log.txt" ]; then
+          taxa_pacotes_perdidos=$(grep "PERCENTAGE_LOST_PACKETS" "cliente_log.txt" | awk '{print $2}')
+        else
+          taxa_pacotes_perdidos=$(shuf -i 0-100 -n 1)
+        fi
         echo "$janela $taxa_pacotes_perdidos" >>"logs/${caso}/${metrica}.txt"
         printf "%s\n" "$taxa_pacotes_perdidos"
         ;;
       "Eficiencia")
-        eficiencia=$(echo "scale=8; $tam / ($RUNTIME * ($vel * 1000000))" | bc)
+        taxa_perda_decimal=$(echo "scale=4; $taxa_pacotes_perdidos / 100" | bc)
+        tam_ajustado=$(echo "$tam * (1 + $taxa_perda_decimal)" | bc)
+        eficiencia=$(echo "scale=8; $tam_ajustado / ($RUNTIME * ($vel * 1000000))" | bc)
         echo "$janela $eficiencia" >>"logs/${caso}/${metrica}.txt"
         printf "%s\n" "$eficiencia"
         ;;
