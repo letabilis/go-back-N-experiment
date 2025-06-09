@@ -10,8 +10,8 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Diretórios
-mkdir -p graficos
-mkdir -p logs
+mkdir -p -v graficos
+mkdir -p -v logs
 
 # Configurações
 janelas=(4 8 16)
@@ -25,7 +25,7 @@ testes=(
   "H 100 300 10"
 )
 metricas=(
-  "Transmissão_(s)"
+  "Transmissao_(s)"
   "Arquivo_(bits)"
   "LOSS_(%)"
   "Eficiencia"
@@ -85,13 +85,12 @@ for teste in "${testes[@]}"; do
 
   printf "[TESTE] Caso: %s | Velocidade: %s | Atraso: %s | Perda: %s\n\n" "$caso" "$vel" "$atraso" "$perda"
 
-  mkdir -p graficos/${caso}
-  mkdir -p logs/${caso}
+  mkdir -p -v graficos/${caso}/
+  mkdir -p -v logs/${caso}/
 
-  >"logs/${caso}/${metricas[0]}.txt"
-  >"logs/${caso}/${metricas[1]}.txt"
-  >"logs/${caso}/${metricas[2]}.txt"
-  >"logs/${caso}/${metricas[3]}.txt"
+  for metrica in "${metricas[@]}"; do
+    : >"logs/${caso}/${metrica}.txt"
+  done
 
   init_topology $vel $atraso $perda
 
@@ -103,13 +102,15 @@ for teste in "${testes[@]}"; do
     printf "[JANELA]: %s\n" "$janela"
 
     echo "[INFO] Executando servidor em h2..."
-    xterm -e "mnexec -a $(pgrep -f 'bash.*h2') python3 servidor_gbn.py > logs/servidor_log.txt" &
-    sleep 2
+    h2=$(pgrep -f "mnexec.*h2")
+    xterm -e "mnexec -a $h2 python3 servidor_gbn.py > servidor_log.txt" &
+    sleep 5
 
     echo "[INFO] Iniciando medicao de tempo e cliente em h1..."
     START=$(date +%s.%N)
 
-    xterm -e "mnexec -a $(pgrep -f 'bash.*h1') python3 cliente_gbn.py --window $janela --file input_02.txt > logs/cliente_log.txt" &
+    h1=$(pgrep -f "mnexec.*h1")
+    xterm -e "mnexec -a $h1 python3 cliente_gbn.py --window $janela --file input_02.txt > cliente_log.txt" &
     sleep 15
 
     END=$(date +%s.%N)
@@ -118,22 +119,22 @@ for teste in "${testes[@]}"; do
     for metrica in "${metricas[@]}"; do
       printf "[INFO] %s: " "$metrica"
       case "$metrica" in
-      "Transmissão_(s)")
+      "Transmissao_(s)")
         echo "$janela $RUNTIME" >>"logs/${caso}/${metrica}.txt"
         printf "%s\n" "$RUNTIME segundos"
         ;;
       "Arquivo_(bits)")
-        tam=$(grep "FILE_SIZE_BITS" "logs/cliente_log.txt" | awk '{print $2}')
+        tam=$(($(stat -c %s input.txt) * 8))
         echo "$janela $tam" >>"logs/${caso}/${metrica}.txt"
         printf "%s\n" "$tam bits"
         ;;
-      "Taxa_de_pacotes_perdidos_(%)")
-        taxa_pacotes_perdidos=$(grep "PERCENTAGE_LOST_PACKETS" "logs/cliente_log.txt" | awk '{print $2}')
+      "LOSS_(%)")
+        taxa_pacotes_perdidos=$(grep "PERCENTAGE_LOST_PACKETS" "cliente_log.txt" | awk '{print $2}')
         echo "$janela $taxa_pacotes_perdidos" >>"logs/${caso}/${metrica}.txt"
         printf "%s\n" "$taxa_pacotes_perdidos"
         ;;
       "Eficiencia")
-        eficiencia=$(echo "scale=6; $tam / ($RUNTIME * ($vel * 1000000))" | bc)
+        eficiencia=$(echo "scale=8; $tam / ($RUNTIME * ($vel * 1000000))" | bc)
         echo "$janela $eficiencia" >>"logs/${caso}/${metrica}.txt"
         printf "%s\n" "$eficiencia"
         ;;
