@@ -25,10 +25,10 @@ testes=(
   "H 100 300 10"
 )
 metricas=(
-  "Tempo total de transmissão (s)"
-  "Tamanho do arquivo transmitido (bits)"
-  "Taxa de pacotes perdidos (%)"
-  "Eficiência"
+  "Transmissão_(s)"
+  "Arquivo_(bits)"
+  "LOSS_(%)"
+  "Eficiencia"
 )
 
 # Funções auxiliares
@@ -57,20 +57,22 @@ function plot {
   python3 <<EOF
 import matplotlib.pyplot as plt
 
+filename = "logs/${caso}/${metrica}.txt"
+
 resultados = {}
-with open("logs/${caso}/${metrica}.txt") as f:
+with open(filename) as f:
     for line in f:
         janela, valor = line.strip().split()
         resultados[int(janela)] = float(valor)
 
 plt.figure(figsize=(6, 4))
-plt.plot([4, 8, 16], [resultados[k] for k in [4, 8, 16]], marker='o', color="steelblue")
+plt.plot([4, 8, 16], [resultados.get(k, 0) for k in [4, 8, 16]], marker='o', color="steelblue")
 plt.title("${caso} - ${metrica}")
 plt.xlabel("Janela")
 plt.ylabel("${metrica}")
 plt.tight_layout()
 plt.savefig("graficos/${caso}/${metrica}.png")
-print("[INFO] Gráfico salvo como 'graficos/${caso}/${metrica}.png'")
+print("[INFO] Grafico salvo como 'graficos/${caso}/${metrica}.png'")
 EOF
 }
 
@@ -83,7 +85,6 @@ for teste in "${testes[@]}"; do
 
   printf "[TESTE] Caso: %s | Velocidade: %s | Atraso: %s | Perda: %s\n\n" "$caso" "$vel" "$atraso" "$perda"
 
-  # Separado arquivo de graficos, log para cada caso de teste.
   mkdir -p graficos/${caso}
   mkdir -p logs/${caso}
 
@@ -92,7 +93,6 @@ for teste in "${testes[@]}"; do
   >"logs/${caso}/${metricas[2]}.txt"
   >"logs/${caso}/${metricas[3]}.txt"
 
-  # Iniciando topologia com os parametros para o teste
   init_topology $vel $atraso $perda
 
   echo "[INFO] Iniciando Mininet..."
@@ -102,12 +102,11 @@ for teste in "${testes[@]}"; do
   for janela in "${janelas[@]}"; do
     printf "[JANELA]: %s\n" "$janela"
 
-    # Rodar algoritmo GBN, medindo o tempo de execução.
     echo "[INFO] Executando servidor em h2..."
     xterm -e "mnexec -a $(pgrep -f 'bash.*h2') python3 servidor_gbn.py > logs/servidor_log.txt" &
     sleep 2
 
-    echo "[INFO] Iniciando medição de tempo e cliente em h1..."
+    echo "[INFO] Iniciando medicao de tempo e cliente em h1..."
     START=$(date +%s.%N)
 
     xterm -e "mnexec -a $(pgrep -f 'bash.*h1') python3 cliente_gbn.py --window $janela --file input_02.txt > logs/cliente_log.txt" &
@@ -116,45 +115,42 @@ for teste in "${testes[@]}"; do
     END=$(date +%s.%N)
     RUNTIME=$(echo "$END - $START" | bc)
 
-    # Registrar resultados nos logs
     for metrica in "${metricas[@]}"; do
       printf "[INFO] %s: " "$metrica"
-      case ${metrica} in
-      "Tempo total de transmissão (s)")
+      case "$metrica" in
+      "Transmissão_(s)")
         echo "$janela $RUNTIME" >>"logs/${caso}/${metrica}.txt"
         printf "%s\n" "$RUNTIME segundos"
         ;;
-
-      "Tamanho do arquivo transmitido (bits)")
+      "Arquivo_(bits)")
         tam=$(grep "FILE_SIZE_BITS" "logs/cliente_log.txt" | awk '{print $2}')
         echo "$janela $tam" >>"logs/${caso}/${metrica}.txt"
         printf "%s\n" "$tam bits"
         ;;
-
-      "Taxa de pacotes perdidos (%)")
+      "Taxa_de_pacotes_perdidos_(%)")
         taxa_pacotes_perdidos=$(grep "PERCENTAGE_LOST_PACKETS" "logs/cliente_log.txt" | awk '{print $2}')
         echo "$janela $taxa_pacotes_perdidos" >>"logs/${caso}/${metrica}.txt"
         printf "%s\n" "$taxa_pacotes_perdidos"
         ;;
-
-      "Eficiência")
-        eficiencia=$(echo "${tam} / (${RUNTIME} * (${vel} * 1000000))" | bc)
+      "Eficiencia")
+        eficiencia=$(echo "scale=6; $tam / ($RUNTIME * ($vel * 1000000))" | bc)
         echo "$janela $eficiencia" >>"logs/${caso}/${metrica}.txt"
         printf "%s\n" "$eficiencia"
         ;;
-
       esac
 
-      echo "[INFO] Gerando gráfico comparativo para o cenário [$caso/$metrica]..."
-      plot ${caso} ${metrica}
+      echo "[INFO] Gerando grafico comparativo para o cenario [$caso/$metrica]..."
+      plot ${caso} "${metrica}"
     done
+
     echo "[INFO] Verificando integridade dos dados..."
     if diff output.txt input.txt >diff_result.txt; then
       echo "[SUCCESS] Arquivos coincidem."
     else
-      echo "[FAIL] Arquivos não coincidem. Veja diff_result.txt."
+      echo "[FAIL] Arquivos nao coincidem. Veja diff_result.txt."
     fi
   done
 done
+
 echo "[INFO] Encerrando Mininet..."
 mn -c

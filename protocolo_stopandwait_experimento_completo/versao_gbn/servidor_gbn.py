@@ -12,14 +12,14 @@ def main():
 
     with open('output.txt', 'wb') as file:
         print('Servidor aguardando dados...')
-        encerramento = False
-        while not encerramento:
+        while True:
+            expected_seq = expected_seq % 256
             try:
                 data, addr = sock.recvfrom(BUFFER_SIZE)
                 seq = data[0]
                 payload = data[1:]
 
-                if payload:
+                if len(payload) > 1:
                     if seq == expected_seq:
                         file.write(payload)
                         print('Recebido seq={}, dados gravados.'.format(seq))
@@ -35,7 +35,7 @@ def main():
                     print('Recebido sinal de encerramento, payload é nulo')
                     ack = bytes([seq])
                     print('ACK {} enviado.'.format(seq))
-                    encerramento = True
+                    break
                     
                 sock.sendto(ack, addr)
 
@@ -48,4 +48,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

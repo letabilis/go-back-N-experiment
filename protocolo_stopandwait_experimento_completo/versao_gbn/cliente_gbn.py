@@ -25,6 +25,9 @@ def main():
         next_data = file.read(BLOCK_SIZE)
 
         while True:
+            next_seq = next_seq % 256
+            current_seq = current_seq % 256
+
             while len(sliding_window) < N and next_data:
                 seq_byte = next_seq.to_bytes(1, 'big')
                 packet = seq_byte + next_data
@@ -32,7 +35,7 @@ def main():
                 sliding_window.append((next_seq, packet))
                 count_sent_packets += 1
                 print('Enviado quadro com seq={}'.format(next_seq))
-                next_seq += 1
+                next_seq = (next_seq + 1) % 256
 
                 next_data = file.read(BLOCK_SIZE)
 
@@ -48,7 +51,7 @@ def main():
                     sliding_window = [
                         (seq, p) for seq, p in sliding_window if seq > ack_num
                     ]
-                    current_seq = ack_num + 1
+                    current_seq = (ack_num + 1) % 256
 
             except socket.timeout:
                 print('Timeout, reenviando a partir de seq={}'.format(current_seq))
@@ -69,15 +72,16 @@ def main():
         try:
             ack, _ = sock.recvfrom(1)
             if int.from_bytes(ack, 'big') == next_seq:
-                acked = True
-                print('ACK {} recebido para encerramento'.format(next_seq))
-                print('FILE_SIZE_BITS {}'.format(file_size * 8))
-                print('EXPECTED_PACKETS {}'.format(count_expected_packets))
-                print('SENT_PACKETS {}'.format(count_sent_packets))
-                print('PERCENTAGE_LOST_PACKETS {:.2f}%'.format( 
-                    ((count_sent_packets - count_expected_packets) / count_expected_packets) * 100 
-                ))
+                                acked = True
         except socket.timeout:
+            print('ACK {} recebido para encerramento'.format(next_seq))
+            print('FILE_SIZE_BITS {}'.format(file_size * 8))
+            print('EXPECTED_PACKETS {}'.format(count_expected_packets))
+            print('SENT_PACKETS {}'.format(count_sent_packets))
+            print('PERCENTAGE_LOST_PACKETS {:.2f}%'.format( 
+                ((count_sent_packets - count_expected_packets) / count_expected_packets) * 100 
+            ))
+            return
             print('Timeout, reenviando encerramento')
 
     sock.close()
@@ -91,4 +95,3 @@ if __name__ == '__main__':
     N = args.window
     INPUT_FILE_PATH = args.file
     main()
-
