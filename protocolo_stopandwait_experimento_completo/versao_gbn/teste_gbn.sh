@@ -124,16 +124,12 @@ for teste in "${testes[@]}"; do
         printf "%s\n" "$RUNTIME segundos"
         ;;
       "Arquivo_(bits)")
-        tam=$(($(stat -c %s input.txt) * 8))
+        tam=$(($(stat -c %s input_02.txt) * 8))
         echo "$janela $tam" >>"logs/${caso}/${metrica}.txt"
         printf "%s\n" "$tam bits"
         ;;
       "LOSS_(%)")
-        if [ -f "cliente_log.txt" ]; then
-          taxa_pacotes_perdidos=$(grep "PERCENTAGE_LOST_PACKETS" "cliente_log.txt" | awk '{print $2}')
-        else
-          taxa_pacotes_perdidos=$(shuf -i 0-100 -n 1)
-        fi
+        taxa_pacotes_perdidos=$(grep "PERCENTAGE_LOST_PACKETS" "cliente_log.txt" | awk '{print $2}')
         echo "$janela $taxa_pacotes_perdidos" >>"logs/${caso}/${metrica}.txt"
         printf "%s\n" "$taxa_pacotes_perdidos"
         ;;
