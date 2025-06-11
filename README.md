@@ -27,7 +27,7 @@ sequenceDiagram
 ### Execução
 
 ```sh
-python cliente_gbn.py -w 8 -f meu_arquivo.txt
+python cliente_gbn.py -w 8 -f input_02.txt
 ```
 
 - `-w` ou `--window`: define o tamanho da janela (4, 8, 16).
