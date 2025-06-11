@@ -112,7 +112,7 @@ flowchart TD
 
 Ao término de cada execução, para cada cenário e janela, o script gera:
 
-- **Logs brutos**: Arquivos TXT em `logs/CASO/METRICA.txt`
-- **Gráficos PNG**: Salvos em `graficos/CASO/METRICA.png`  
+- **Logs**: Arquivos TXT em `logs/CASO/METRICA.txt`
+- **Gráficos**: Salvos em `graficos/CASO/METRICA.png`  
 
 
