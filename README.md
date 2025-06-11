@@ -26,7 +26,7 @@ O arquivo `teste_gbn.sh` realiza testes automatizados para avaliar o desempenho 
 | Artefato         | Função                                                              |
 |--------------------------|---------------------------------------------------------------------|
 | `graficos/`              | Armazena todos os gráficos gerados em PNG.                          |
-| `logs/`                  | Guarda os logs brutos de métricas em TXT.                           |
+| `logs/`                  | Guarda os logs de métricas em TXT.                           |
 | `topo_stopandwait.py`    | Topologia mininet gerado dinamicamente baseado no cenário e suas variáveis        |
 | `input_02.txt`           | Arquivo de entrada para transmissão (métricas).      |
 | `cliente_gbn.py`         | Transmissão de dados.                      |
