@@ -181,6 +181,17 @@ function init_topology {
     local vel=$1
     local atraso=$2
     local perda=$3
+cat >topo_stopandwait.py <<EOF
+from mininet.topo import Topo
+class StopAndWaitTopo(Topo):
+    def build(self):
+        client = self.addHost('h1')
+        server = self.addHost('h2')
+        switch = self.addSwitch('s1')
+        self.addLink(client, switch, bw=$vel, delay='${atraso}ms', loss=$perda)
+        self.addLink(server, switch, bw=$vel, delay='${atraso}ms', loss=$perda)
+topos = {'stopandwait': (lambda: StopAndWaitTopo())}
+EOF
 }
 ```
 
@@ -194,6 +205,27 @@ A função `plot` utiliza Python/Matplotlib para gerar gráficos PNG automaticam
 function plot {
     local caso=$1
     local metrica=$2
+python3 <<EOF
+import matplotlib.pyplot as plt
+
+filename = "logs/${caso}/${metrica}.txt"
+
+resultados = {}
+with open(filename) as f:
+    for line in f:
+        janela, valor = line.strip().split()
+        resultados[int(janela)] = float(valor)
+
+plt.figure(figsize=(6, 4))
+plt.plot([4, 8, 16], [resultados.get(k, 0) for k in [4, 8, 16]], marker='o', color="steelblue")
+plt.title("${caso} - ${metrica}")
+plt.xlabel("Janela")
+plt.ylabel("${metrica}")
+plt.tight_layout()
+plt.savefig("graficos/${caso}/${metrica}.png")
+print("[INFO] Grafico salvo como 'graficos/${caso}/${metrica}.png'")
+EOF
+
 }
 ```
 
