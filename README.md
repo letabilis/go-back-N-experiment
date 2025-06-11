@@ -241,4 +241,5 @@ Ao término de cada execução, para cada cenário e janela, o script gera:
 - **Logs**: Arquivos TXT em `logs/CASO/METRICA.txt`
 - **Gráficos**: Salvos em `graficos/CASO/METRICA.png`  
 
+## Resultados 
 
