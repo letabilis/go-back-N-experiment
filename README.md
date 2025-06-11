@@ -54,8 +54,11 @@ Como saída, nos logs, encontra-se os valores de:
 - Percentual de perda de pacotes, levando em consideração o número de pacotes que sofreram retransmissões através da soma com número esperado de pacotes. (`PERCENTAGE_LOST_PACKETS`)
 
 ```python
-print('PERCENTAGE_LOST_PACKETS {:.2f}'.format(
-    ((count_sent_packets - count_expected_packets) / count_expected_packets) * 100
+print('ACK {} recebido para encerramento'.format(next_seq))
+print('EXPECTED_PACKETS {}'.format(count_expected_packets))
+print('SENT_PACKETS {}'.format(count_sent_packets))
+print('PERCENTAGE_LOST_PACKETS {:.2f}'.format( 
+    ((count_sent_packets - count_expected_packets) / count_expected_packets) * 100 
 ))
 ```
 ---
